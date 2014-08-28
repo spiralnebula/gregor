@@ -16,13 +16,25 @@ define({
 		return {
 			body  : define.body.get("gregor "+ define.for ),
 			map   : {},
-			value : this.get_current_day_map()
+			value : this.get_day()
 		}
 	},
 	
 	define_event : function ( define ) { 
 		var self = this
 		return [
+			{ 
+				called       : "gregor chose month",
+				that_happens : [
+					{ 
+						on : define.with.body,
+						is : [ "click" ]
+					}
+				],
+				only_if : function ( heard ) { 
+					return ( heard.event.target.hasAttribute("data-gregor-set-month") )
+				}
+			},
 			{ 
 				called       : "gregor toggle calendar",
 				that_happens : [
@@ -52,6 +64,18 @@ define({
 
 	define_listener : function ( define ) { 
 		return [ 
+			{ 
+				for       : "gregor chose month",
+				that_does : function ( heard ) {
+					var name, option_state, calendar_body, calendar_body_parent
+					name                 = heard.event.target.getAttribute("data-gregor-name")
+					option_state         = heard.state.option[name]
+					calendar_body        = option_state.body.get("gregor calendar "+ name )
+					calendar_body_parent = calendar_body.body.parentElement
+					console.log( calendar_body_parent )
+					return heard
+				}
+			},
 			{ 
 				for       : "gregor toggle calendar",
 				that_does : function ( heard ) {
@@ -124,109 +148,114 @@ define({
 	},
 
 	define_calendar : function ( define ) {
-		var self, date
-		self = this
-		current = this.get_day()
 		return {
 			"class"   : "package_main_calendar_wrap",
 			"display" : "block",
 			"mark_as" : "gregor calendar "+ define.name,
-			"child"   : [
-				{
-					"class" : "package_main_regular_wrap",
-					"child" : [
-						{
-							"class" : "package_main_date_month_wrap",
-							"child" : [
-								{ 
-									"class" : "package_main_date_month_text",
-									"text"  : "2014"
-								},
-							]
-						},
-						{
-							"class" : "package_main_date_month_wrap",
-							"child" : [
-								{ 
-									"class"             : "package_main_date_month_text",
-									"text"              : current.previous_month().date.month.name,
-									"data-gregor-month" : current.previous_month().date.month.name
-								},
-								{
-									"class"             : "package_main_date_month_text_current",
-									"text"              : current.date.month.name,
-									"data-gregor-month" : current.date.month.name
-								},
-								{
-									"class"             : "package_main_date_month_text",
-									"text"              : current.next_month().date.month.name,
-									"data-gregor-month" : current.next_month().date.month.name,
-								}
-							]
+			"child"   : this.define_calendar_body( define )
+		}
+	},
+
+	define_calendar_body : function ( define ) {
+		var self, date
+		self = this
+		current = define.day || this.get_day()
+		return [
+			{
+				"class" : "package_main_regular_wrap",
+				"child" : [
+					{
+						"class" : "package_main_date_month_wrap",
+						"child" : [
+							{ 
+								"class" : "package_main_date_month_text",
+								"text"  : "2014"
+							},
+						]
+					},
+					{
+						"class" : "package_main_date_month_wrap",
+						"child" : [
+							{ 
+								"class"                 : "package_main_date_month_text",
+								"text"                  : current.previous_month().date.month.name,
+								"data-gregor-set-month" : current.previous_month().date.month.name,
+								"data-gregor-name"      : define.name
+							},
+							{
+								"class" : "package_main_date_month_text_current",
+								"text"  : current.date.month.name,
+							},
+							{
+								"class"                 : "package_main_date_month_text",
+								"text"                  : current.next_month().date.month.name,
+								"data-gregor-set-month" : current.next_month().date.month.name,
+								"data-gregor-name"      : define.name
+							}
+						]
+					}
+				]
+			},
+			{ 
+				"class" : "package_main_regular_wrap",
+				"child" : this.library.morph.index_loop({
+					subject : ["MO","TU","WE","TH","FR","SA","SU"],
+					else_do : function ( loop ) { 
+						return loop.into.concat({
+							"class" : "package_main_calendar_day_name",
+							"text"  : loop.indexed
+						})
+					}
+				})
+			},
+			{
+				"class" : "package_main_regular_wrap",
+				"child" : this.library.morph.index_loop({
+					subject : define.month,
+					else_do : function ( loop ) {
+						var definition
+						definition = {
+							"class"             : ( 
+								current.date.day.number === loop.indexed.day.number ? 
+									"package_main_calendar_day_number_selected" : 
+									"package_main_calendar_day_number" 
+							),
+							"text"              : loop.indexed.day.number,
+							"data-gregor-name"  : define.name,
+							"data-gregor-date"  : loop.indexed.day.number,
+							"data-gregor-month" : loop.indexed.month.name,
+							"data-gregor-year"  : loop.indexed.year
 						}
-					]
-				},
-				{ 
-					"class" : "package_main_regular_wrap",
-					"child" : this.library.morph.index_loop({
-						subject : ["MO","TU","WE","TH","FR","SA","SU"],
-						else_do : function ( loop ) { 
-							return loop.into.concat({
-								"class" : "package_main_calendar_day_name",
-								"text"  : loop.indexed
+
+						if ( current.date.day.number === loop.indexed.day.number ) { 
+							definition["mark_as"] = "gregor current date "+ define.name
+						}
+
+						if ( loop.index === 0 ) { 
+							loop.into = loop.into.concat( self.library.morph.while_greater_than_zero({
+								count   : ( 7 - ( 7 - loop.indexed.day.week_day_number ) - 1 ),
+								into    : [],
+								else_do : function ( while_loop ) {
+									return while_loop.into.concat({
+										"class"      : "package_main_calendar_day_number",
+										"visibility" : "hidden",
+										"text"       : "."
+									})
+								}
+							}))
+						}
+
+						if ( loop.indexed.day.week_day_number === 1 ) { 
+							loop.into = loop.into.concat({
+								"class" : "package_main_calendar_day_seperator",
 							})
 						}
-					})
-				},
-				{
-					"class" : "package_main_regular_wrap",
-					"child" : this.library.morph.index_loop({
-						subject : define.month,
-						else_do : function ( loop ) {
-							var definition
-							definition = {
-								"class"             : ( 
-									current.date.day.number === loop.indexed.day.number ? 
-										"package_main_calendar_day_number_selected" : 
-										"package_main_calendar_day_number" 
-								),
-								"text"              : loop.indexed.day.number,
-								"data-gregor-name"  : define.name,
-								"data-gregor-date"  : loop.indexed.day.number,
-								"data-gregor-month" : loop.indexed.month.name,
-								"data-gregor-year"  : loop.indexed.year
-							}
 
-							if ( current.date.day.number === loop.indexed.day.number ) { 
-								definition["mark_as"] = "gregor current date "+ define.name
-							}
-
-							if ( loop.index === 0 ) { 
-								loop.into = loop.into.concat( self.library.morph.while_greater_than_zero({
-									count   : ( 7 - ( 7 - loop.indexed.day.week_day_number ) - 1 ),
-									into    : [],
-									else_do : function ( while_loop ) {
-										return while_loop.into.concat({
-											"class"      : "package_main_calendar_day_number",
-											"visibility" : "hidden",
-											"text"       : "."
-										})
-									}
-								}))
-							}
-
-							if ( loop.indexed.day.week_day_number === 1 ) { 
-								loop.into = loop.into.concat({
-									"class" : "package_main_calendar_day_seperator",
-								})
-							}
-
-							return loop.into.concat( definition )
-						}
-					})
-				}
-			]
-		}
+						return loop.into.concat( definition )
+					}
+				})
+			}
+		]
 	},
 
 	define_date_format : function ( date ) {
