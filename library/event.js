@@ -1,4 +1,5 @@
 define({
+
 	define : {
 		allow   : "*",
 		require : [
@@ -10,7 +11,8 @@ define({
 		return {
 			body        : define.body.get("gregor"),
 			map         : {},
-			date_object : this.library.calendar_logic.get_day()
+			date_object : this.library.calendar_logic.get_day(),
+			with        : define.with.with
 		}
 	},
 	
@@ -18,7 +20,31 @@ define({
 		var self = this
 		return [
 			{ 
-				called       : "gregor open month choice",
+				called       : "open year select dropdown",
+				that_happens : [
+					{ 
+						on : define.body.body,
+						is : [ "click" ]
+					}
+				],
+				only_if : function ( heard ) {
+					return heard.event.target.hasAttribute("data-gregor-open-year-dropdown")
+				}
+			},
+			{ 
+				called       : "open month select dropdown",
+				that_happens : [
+					{ 
+						on : define.body.body,
+						is : [ "click" ]
+					}
+				],
+				only_if : function ( heard ) {
+					return heard.event.target.hasAttribute("data-gregor-open-month-dropdown")
+				}
+			},
+			{ 
+				called       : "open month choice",
 				that_happens : [
 					{ 
 						on : define.body.body,
@@ -30,19 +56,7 @@ define({
 				}
 			},
 			{ 
-				called       : "gregor choose year",
-				that_happens : [
-					{ 
-						on : define.body.body,
-						is : [ "click" ]
-					}
-				],
-				only_if : function ( heard ) {
-					return ( heard.event.target.hasAttribute("data-gregor-set-year") )
-				}
-			},
-			{ 
-				called       : "gregor open year choice",
+				called       : "open year choice",
 				that_happens : [
 					{ 
 						on : define.body.body,
@@ -54,7 +68,19 @@ define({
 				}
 			},
 			{ 
-				called       : "gregor chose month",
+				called       : "choose year",
+				that_happens : [
+					{ 
+						on : define.body.body,
+						is : [ "click" ]
+					}
+				],
+				only_if : function ( heard ) {
+					return ( heard.event.target.hasAttribute("data-gregor-set-year") )
+				}
+			},
+			{ 
+				called       : "chose month",
 				that_happens : [
 					{ 
 						on : define.body.body,
@@ -66,7 +92,7 @@ define({
 				}
 			},
 			{ 
-				called       : "gregor toggle calendar",
+				called       : "toggle calendar",
 				that_happens : [
 					{ 
 						on : define.body.body,
@@ -78,7 +104,7 @@ define({
 				}
 			},
 			{
-				called       : "gregor chose date",
+				called       : "chose date",
 				that_happens : [
 					{ 
 						on : define.body.body,
