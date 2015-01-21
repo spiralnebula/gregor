@@ -105,7 +105,7 @@ define({
 						month : option_state.date_object.date.month.number - 1,
 						day   : option_state.date_object.date.day.number
 					})
-					console.log( new_year.date )
+					
 					option_state.date_object = new_year
 					option_state.calendar    = self.library.transistor.make( 
 						self.library.body.define_calendar({
