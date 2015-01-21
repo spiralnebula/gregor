@@ -7,6 +7,7 @@ define({
 			"calendar_logic",
 			"body",
 			"transistor",
+			"bodymap",
 		]
 	},
 
@@ -95,8 +96,9 @@ define({
 				for       : "choose year",
 				that_does : function ( heard ) {
 					
-					var option_state, calendar_body, new_year, calendar_body_parent
+					var option_state, calendar_body, new_year, calendar_body_parent, body
 
+					// body                  = self.
 					option_state          = heard.state
 					calendar_body         = option_state.calendar || option_state.body.get("gregor calendar")
 					calendar_body_parent  = calendar_body.body.parentElement
@@ -120,6 +122,11 @@ define({
 
 					calendar_body_parent.removeChild( calendar_body.body )
 					option_state.calendar.append( calendar_body_parent )
+
+					console.log( heard.event.target )
+
+					// calendar_body.body.style.left = heard.event.target.offsetLeft + "px"
+					// calendar_body.body.style.top  = ( heard.event.target.offsetTop + heard.event.target.clientHeight ) + "px"
 					
 					return heard
 				}
@@ -180,6 +187,9 @@ define({
 						calendar_body.body.style.display === "block" ?
 							"none" : "block"
 					)
+					calendar_body.body.style.left = heard.event.target.offsetLeft + "px"
+					calendar_body.body.style.top  = ( heard.event.target.offsetTop + heard.event.target.clientHeight ) + "px"
+
 					return heard
 				}
 			},

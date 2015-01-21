@@ -9,6 +9,10 @@ define({
 
 	define_state : function ( define ) { 
 		return {
+			body : { 
+				node : define.body.body,
+				map  : {}
+			},
 			body        : define.body.get("gregor"),
 			map         : {},
 			date_object : this.library.calendar_logic.get_day(),
